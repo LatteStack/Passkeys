@@ -1,0 +1,16 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/*-debug.log": true,
+    "**/.next/*": true,
+    "**/pnpm-lock.yaml": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/*.js.map": true,
+    "public/sw.js": true,
+    "dist/*": true,
+    "**/.next/*": true,
+    "**/pnpm-lock.yaml": true
+  }
+}

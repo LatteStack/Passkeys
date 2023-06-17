@@ -1,0 +1,45 @@
+{
+  "name": "passkeys",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/passkeys/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/passkeys",
+        "tsConfig": "packages/passkeys/tsconfig.lib.json",
+        "packageJson": "packages/passkeys/package.json",
+        "main": "packages/passkeys/src/index.ts",
+        "assets": ["packages/passkeys/*.md"]
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs passkeys {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/passkeys/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "packages/passkeys/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    }
+  },
+  "tags": []
+}

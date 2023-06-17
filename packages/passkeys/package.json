@@ -1,0 +1,21 @@
+{
+  "name": "@lattestack/passkeys",
+  "version": "0.0.1",
+  "dependencies": {
+    "@types/nodemailer": "^6.4.8",
+    "before-after-hook": "^3.0.2",
+    "date-fns": "^2.30.0",
+    "debug": "^4.3.4",
+    "fido2-lib": "^3.4.0",
+    "jose": "^4.14.4",
+    "lodash": "^4.17.21",
+    "nodemailer": "^6.9.3",
+    "reflect-metadata": "^0.1.13",
+    "tsyringe": "^4.7.0",
+    "yup": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.8",
+    "@types/lodash": "^4.14.195"
+  }
+}
