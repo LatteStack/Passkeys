@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { Adapter, type UserEntity, type CredentialEntity } from '../adapters/Adapter'
+import { Adapter, type UserEntity } from '../adapters/Adapter'
 import { OPTIONS } from '../constants'
 import { Jwt } from '../Jwt'
 import { type PasskeysOptions } from '../Passkeys'
@@ -13,7 +13,7 @@ import {
   type PublicKeyCredentialUserEntityJSON,
   type PublicKeyCredentialDescriptorJSON
 } from '../types'
-import { fromBase64Url, now } from '../utils'
+import { base64urlToPlain, extractChallengeFromClientDataJSON, now } from '../utils'
 import { WebAuthn } from '../WebAuthn'
 import { Provider } from './Provider'
 import { InvalidOperationException } from '../exceptions'
@@ -74,7 +74,7 @@ export class Fido2Provider extends Provider {
       return await this.challengeForNewUser({ email })
     }
 
-    const existingCredentials = existingUser?.credentials ?? []
+    const existingCredentials = await this.adapter.getCredentialsByUserId(existingUser.id)
     const webauthnUser: PublicKeyCredentialUserEntityJSON = {
       id: existingUser.id,
       name: email,
@@ -155,11 +155,10 @@ export class Fido2Provider extends Provider {
 
   async signIn (request: Fido2SignInRequest): Promise<AuthResponse> {
     const { credential: publicKeyCredential } = request
-    const { challenge } = JSON.parse(
-      new TextDecoder('utf-8').decode(
-        fromBase64Url(publicKeyCredential.response.clientDataJSON)
-      )
+    const challengeBase64 = extractChallengeFromClientDataJSON(
+      publicKeyCredential.response.clientDataJSON
     )
+    const challenge = base64urlToPlain(challengeBase64)
 
     const { payload } = await this.useVerificationToken<ChallengePayload>(challenge)
     const { type, subject } = payload
@@ -171,7 +170,7 @@ export class Fido2Provider extends Provider {
 
         if (email != null) {
           return await this.signInAsNewUser({
-            challenge,
+            challenge: challengeBase64,
             attestation: publicKeyCredential as PublicKeyCredentialWithAttestationJSON,
             newUser: {
               id: subject,
@@ -208,17 +207,16 @@ export class Fido2Provider extends Provider {
     const { newUser, challenge, attestation } = params
     const attestationResult = await this.webauthn.verifyAttestation(attestation, { challenge })
 
-    const user = await this.createUser({
-      ...newUser,
-      lastSignInTime: now(),
-      credentials: [{
-        id: attestationResult.credId,
-        publicKey: attestationResult.publicKey,
-        counter: attestationResult.counter,
-        userHandle: attestationResult.userHandle,
-        transports: attestation.response.transports,
-        createdAt: now()
-      }]
+    const user = await this.createUser(newUser)
+
+    await this.adapter.createCredential({
+      id: attestationResult.credId,
+      publicKey: attestationResult.publicKey,
+      counter: attestationResult.counter,
+      userHandle: attestationResult.userHandle,
+      transports: attestation.response.transports,
+      createdAt: now(),
+      userId: user.id
     })
 
     return await this.createSession(user)
@@ -230,9 +228,7 @@ export class Fido2Provider extends Provider {
     assertion: PublicKeyCredentialWithAssertionJSON
   }): Promise<AuthResponse> {
     const { user, challenge, assertion } = params
-    const currentCredential = user.credentials.find(({ id }) => {
-      return id === assertion.id
-    })
+    const currentCredential = await this.adapter.getCredential(assertion.id)
 
     if (currentCredential == null) {
       throw new InvalidOperationException()
@@ -267,7 +263,8 @@ export class Fido2Provider extends Provider {
       counter: attestationResult.counter,
       userHandle: attestationResult.userHandle,
       transports: attestation.response.transports,
-      createdAt: now()
+      createdAt: now(),
+      userId: user.id
     })
 
     return await this.createSession(user)

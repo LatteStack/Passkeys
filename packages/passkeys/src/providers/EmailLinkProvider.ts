@@ -29,8 +29,7 @@ export class EmailLinkProvider extends Provider {
   // signIn
   // signOut
 
-  static create(emailLinkOptions: EmailLinkProviderOptions): EmailLinkProvider {
+  static create (emailLinkOptions: EmailLinkProviderOptions): EmailLinkProvider {
     //
   }
 }
-

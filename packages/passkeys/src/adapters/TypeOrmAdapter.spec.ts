@@ -46,7 +46,7 @@ describe('TypeormAdapter', () => {
 
   afterAll(async () => {
     await dataSource.dropDatabase()
-    dataSource.destroy()
+    await dataSource.destroy()
     db.close()
   })
 
@@ -146,6 +146,11 @@ describe('TypeormAdapter', () => {
       expect(session).toEqual(sessionToCreate)
     })
 
+    it('should correctly get sessions by user id', async () => {
+      const sessions = await adapter.getSessionsByUserId(userId)
+      expect(sessions.length).toBeGreaterThan(0)
+    })
+
     it('should update session correctly', async () => {
       const sessionToUpdate: SessionEntity = { ...sessionToCreate, counter: 2 }
       await adapter.updateSession(sessionToUpdate)
@@ -185,6 +190,11 @@ describe('TypeormAdapter', () => {
     it('should get credential correctly', async () => {
       const credential = await adapter.getCredential(credentialId)
       expect(credential).toEqual(credentialToCreate)
+    })
+
+    it('should correctly get credentials by user id', async () => {
+      const credentials = await adapter.getCredentialsByUserId(userId)
+      expect(credentials.length).toBeGreaterThan(0)
     })
 
     it('should update credential correctly', async () => {

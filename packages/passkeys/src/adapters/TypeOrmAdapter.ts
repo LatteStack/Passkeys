@@ -136,6 +136,13 @@ export class TypeOrmVerificationEntity implements VerificationEntity {
     createdAt!: Date
 }
 
+export const typeOrmEntities = [
+  TypeOrmUserEntity,
+  TypeOrmCredentialEntity,
+  TypeOrmSessionEntity,
+  TypeOrmVerificationEntity
+]
+
 export class TypeOrmAdapter implements Adapter {
   private isInitialized = false
 
@@ -176,6 +183,11 @@ export class TypeOrmAdapter implements Adapter {
     return await manager.findOne(TypeOrmCredentialEntity, { where: { id: credentialId } })
   }
 
+  async getCredentialsByUserId (userId: string): Promise<CredentialEntity[]> {
+    const manager = await this.getManager()
+    return await manager.find(TypeOrmCredentialEntity, { where: { userId } })
+  }
+
   async updateCredential (credential: Partial<CredentialEntity>): Promise<CredentialEntity | void> {
     const manager = await this.getManager()
     await manager.update(TypeOrmCredentialEntity, credential.id, credential)
@@ -194,6 +206,11 @@ export class TypeOrmAdapter implements Adapter {
   async getSession (sessionId: string): Promise<SessionEntity | null> {
     const manager = await this.getManager()
     return await manager.findOne(TypeOrmSessionEntity, { where: { id: sessionId } })
+  }
+
+  async getSessionsByUserId (userId: string): Promise<SessionEntity[]> {
+    const manager = await this.getManager()
+    return await manager.find(TypeOrmSessionEntity, { where: { userId } })
   }
 
   async updateSession (session: Partial<SessionEntity>): Promise<SessionEntity | void> {
@@ -286,12 +303,7 @@ export class TypeOrmAdapter implements Adapter {
   ): TypeOrmAdapter {
     const dataSource = new DataSource({
       ...dataSourceOptions,
-      entities: [
-        TypeOrmUserEntity,
-        TypeOrmCredentialEntity,
-        TypeOrmSessionEntity,
-        TypeOrmVerificationEntity
-      ]
+      entities: typeOrmEntities
     })
 
     return new TypeOrmAdapter(dataSource)

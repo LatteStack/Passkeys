@@ -9,8 +9,9 @@ describe('Jwt', () => {
     container.register(OPTIONS, {
       useValue: {
         secret: 'secret',
+        origin: 'https://localhost',
         webAuthn: {
-          origin: 'https://localhost'
+
         },
         jwt: {
           accessTokenMaxAge: 3600,

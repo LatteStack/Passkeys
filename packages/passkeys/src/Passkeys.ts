@@ -103,7 +103,7 @@ export class Passkeys {
     return tsyringe.container.resolve(Passkeys)
   }
 
-  signOut() {
+  signOut () {
     this.provider.signOut()
   }
 

@@ -16,7 +16,6 @@ import { type AuthResponse } from '../types'
 import { now } from '../utils'
 
 export interface SessionRequest {
-  accessToken: string
   refreshToken: string
 }
 
@@ -100,7 +99,8 @@ export class Provider {
     return verification.data as T
   }
 
-  async session (refreshToken: string): Promise<AuthResponse> {
+  async session (sessionRequest: SessionRequest): Promise<AuthResponse> {
+    const { refreshToken } = sessionRequest
     const { sessionId } = await this.jwt.verifyRefreshToken(refreshToken)
     return await this.updateSession(sessionId)
   }

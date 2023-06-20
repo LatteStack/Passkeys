@@ -48,7 +48,9 @@ const credential: CredentialEntity = {
     '-----END PUBLIC KEY-----\n',
   counter: 0,
   userHandle: null,
-  transports: []
+  transports: [],
+  createdAt: new Date(),
+  userId: user.id
 }
 
 describe('WebAuthn', () => {

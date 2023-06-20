@@ -46,11 +46,13 @@ export abstract class Adapter {
 
   abstract createCredential (credential: CredentialEntity): Promise<CredentialEntity | void>
   abstract getCredential (credentialId: string): Promise<CredentialEntity | null>
+  abstract getCredentialsByUserId (userId: string): Promise<CredentialEntity[]>
   abstract updateCredential (credential: Partial<CredentialEntity>): Promise<CredentialEntity | void>
   abstract deleteCredential (credentialId: string): Promise<CredentialEntity | void>
 
   abstract createSession (session: SessionEntity): Promise<SessionEntity>
   abstract getSession (sessionId: string): Promise<SessionEntity | null>
+  abstract getSessionsByUserId (userId: string): Promise<SessionEntity[]>
   abstract updateSession (session: Partial<SessionEntity>): Promise<SessionEntity | void>
   abstract deleteSession (sessionId: string): Promise<SessionEntity | void>
 

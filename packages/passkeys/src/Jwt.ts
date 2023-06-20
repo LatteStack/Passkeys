@@ -6,7 +6,7 @@ import { now } from './utils/datetime'
 import { addSeconds, fromUnixTime, getUnixTime, hoursToSeconds, isAfter, isBefore, minutesToMilliseconds } from 'date-fns'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { OPTIONS } from './constants'
-import { InvalidSecretException } from './exceptions'
+import { InvalidSecretException, InvalidTokenException } from './exceptions'
 import * as yup from 'yup'
 
 /** https://www.iana.org/assignments/jwt/jwt.xhtml */
@@ -34,6 +34,8 @@ export interface JwtOptions {
   accessTokenMaxAge?: number
   refreshTokenMaxAge?: number
 }
+
+export type JwtAmr = 'accessToken' | 'refreshToken' | 'verificationToken'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Jwt {
@@ -75,7 +77,11 @@ export class Jwt {
       verificationId: yup.string().required()
     }).validate(payload)
 
-    return await new jose.SignJWT(claims)
+    return await new jose.SignJWT({
+      ...claims,
+      verificationId,
+      amr: 'verificationToken'
+    })
       .setExpirationTime(getUnixTime(addSeconds(currentDate, this.verificationTokenMaxAge)))
       .setIssuedAt(getUnixTime(currentDate))
       .setIssuer(this.options.origin)
@@ -117,7 +123,8 @@ export class Jwt {
     return await new jose.SignJWT({
       ...claims,
       sub: subject,
-      sid: sessionId
+      sid: sessionId,
+      amr: 'accessToken'
     })
       .setExpirationTime(getUnixTime(addSeconds(issuedAt, this.accessTokenMaxAge)))
       .setIssuedAt(getUnixTime(issuedAt))
@@ -145,7 +152,7 @@ export class Jwt {
       iat: yup.number().required().test((value) => isBefore(fromUnixTime(value), currentDate)),
       iss: yup.string().required().test((value) => value === this.options.origin),
       jti: yup.string().required().uuid(),
-      sub: yup.string().required().test((value) => value === options?.subject),
+      sub: yup.string().required(),
       sid: yup.string().required()
     }).validate(payload)
 
@@ -168,7 +175,8 @@ export class Jwt {
 
     return await new jose.SignJWT({
       sub: subject,
-      sid: sessionId
+      sid: sessionId,
+      amr: 'refreshToken'
     })
       .setExpirationTime(getUnixTime(addSeconds(issuedAt, this.refreshTokenMaxAge)))
       .setIssuedAt(getUnixTime(issuedAt))
@@ -196,13 +204,30 @@ export class Jwt {
       iat: yup.number().required().test((value) => isBefore(fromUnixTime(value), currentDate)),
       iss: yup.string().required().test((value) => value === this.options.origin),
       jti: yup.string().required().uuid(),
-      sub: yup.string().required().test((value) => value === options?.subject),
-      sid: yup.string().required()
+      sid: yup.string().required(),
+      sub: yup.string().required()
     }).validate(payload)
 
     return {
       subject,
       sessionId
+    }
+  }
+
+  async verifyToken<T = any>(token: string): Promise<T> {
+    const { amr } = jose.decodeJwt(token)
+    switch (amr as JwtAmr) {
+      case 'accessToken':
+        return this.verifyAccessToken(token) as T
+
+      case 'refreshToken':
+        return this.verifyRefreshToken(token) as T
+
+      case 'verificationToken':
+        return this.verifyVerificationToken(token) as T
+
+      default:
+        throw new InvalidTokenException()
     }
   }
 }

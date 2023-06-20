@@ -97,7 +97,7 @@ export class WebAuthn {
     return {
       rp: optionsFromFido2Lib.rp,
       user: options.user,
-      challenge: options.challenge,
+      challenge: toBase64Url(options.challenge),
       pubKeyCredParams: optionsFromFido2Lib.pubKeyCredParams,
       timeout: optionsFromFido2Lib.timeout,
       excludeCredentials: addTypeToDescriptors(options.excludeCredentials ?? []),
@@ -169,7 +169,7 @@ export class WebAuthn {
   }): Promise<PublicKeyCredentialRequestOptionsJSON> {
     const optionsFromFido2Lib = await this.fido2Lib.assertionOptions()
     return {
-      challenge: options.challenge,
+      challenge: toBase64Url(options.challenge),
       rpId: optionsFromFido2Lib.rpId,
       userVerification: optionsFromFido2Lib.userVerification,
       timeout: optionsFromFido2Lib.timeout,

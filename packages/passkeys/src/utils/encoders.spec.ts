@@ -1,0 +1,16 @@
+import { extractChallengeFromClientDataJSON, base64urlToPlain } from './encoders'
+
+describe('encoders', () => {
+  it('should parse clientDataJSON correctly', () => {
+    const clientDataJSON = 'eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiWlhsS2FHSkhZMmxQYVVwSlZYcEpNVTVwU2prdVpYbEtNR1ZZUW14SmFtOXBaREpXYVZsWVZqQmhSelIxV1ROS2JGbFlVbXhKYVhkcFl6TldhV0Z0Vm1wa1EwazJTVzFaTWxscVRURk9Na2swVEZSak5GbFVXWFJPUjFwcFRsTXdOVnBIU210TVZFcHRXbTFPYTAxSFNYZE9ha2w1VFhsSmMwbHRWblJaVjJ4elNXcHZhV1ZJYURSUlIzaG9aRWhTYkdNelVtaFpNbk4xV1RJNWRFbHBkMmxhV0doM1NXcHZlRTVxWnpOUFJHc3lUV3ByZWt4RFNuQlpXRkZwVDJwRk1rOUVZM2xQVkZsNVQxUk5jMGx0YkhwamVVazJTVzFvTUdSSVFUWk1lVGx6WWpKT2FHSkhhSFpqTTFFMlRYcEJkMDFEU1hOSmJYQXdZVk5KTmtscVdURk5SMVY2VGpKYWFFeFViR2hPVkVsMFRrZFJNRnBwTURWUFJFMTRURlJvYTAxVVdYaFphazE1VG1wQ2EwOVRTamt1YlZwWWVIUmZMVWQwTW1jeGRXdzRVREE1WXpKUWNXMUNORzlPVG01SU1HaHlSMGxFUmpoMlptNDJPQSIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImNyb3NzT3JpZ2luIjpmYWxzZX0'
+    const clientData = extractChallengeFromClientDataJSON(clientDataJSON)
+    expect(clientData).toBe('ZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKMGVYQmxJam9pZDJWaVlYVjBhRzR1WTNKbFlYUmxJaXdpYzNWaWFtVmpkQ0k2SW1ZMllqTTFOMkk0TFRjNFlUWXROR1ppTlMwNVpHSmtMVEptWm1Oa01HSXdOakl5TXlJc0ltVnRZV2xzSWpvaWVIaDRRR3hoZEhSbGMzUmhZMnN1WTI5dElpd2laWGh3SWpveE5qZzNPRGsyTWprekxDSnBZWFFpT2pFMk9EY3lPVFl5T1RNc0ltbHpjeUk2SW1oMGRIQTZMeTlzYjJOaGJHaHZjM1E2TXpBd01DSXNJbXAwYVNJNklqWTFNR1V6TjJaaExUbGhOVEl0TkdRMFppMDVPRE14TFRoa01UWXhZak15TmpCa09TSjkubVpYeHRfLUd0MmcxdWw4UDA5YzJQcW1CNG9OTm5IMGhyR0lERjh2Zm42OA')
+  })
+
+  it('should covert base64url to plain text correctly', () => {
+    const base64url = 'SW4gY29tcHV0ZXIgcHJvZ3JhbW1pbmcsIEJhc2U2NCBpcyBhIGdyb3VwIG9mIGJpbmFyeS10by10ZXh0IGVuY29kaW5nIHNjaGVtZXM'
+    const plain = 'In computer programming, Base64 is a group of binary-to-text encoding schemes'
+
+    expect(base64urlToPlain(base64url)).toBe(plain)
+  })
+})
