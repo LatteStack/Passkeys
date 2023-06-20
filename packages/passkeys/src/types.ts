@@ -37,7 +37,7 @@ export interface PublicKeyCredentialWithClientExtensionResults extends PublicKey
   clientExtensionResults?: AuthenticationExtensionsClientOutputsJSON
 }
 
-declare type AuthenticatorTransportJSON = AuthenticatorTransport | 'hybrid'
+export type AuthenticatorTransportJSON = AuthenticatorTransport | 'hybrid'
 
 export interface PublicKeyCredentialDescriptorJSON {
   type: PublicKeyCredentialType

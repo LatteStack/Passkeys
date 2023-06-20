@@ -2,9 +2,10 @@ import { randomUUID } from 'crypto'
 import { addSeconds, isPast } from 'date-fns'
 import { noop } from 'lodash'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { Adapter, type SessionEntity, type UserEntity } from '../Adapter'
+import { Adapter, type SessionEntity, type UserEntity } from '../adapters/Adapter'
 import { OPTIONS } from '../constants'
 import {
+  DuplicateEmailException,
   InvalidSessionException,
   InvalidUserException,
   InvalidVerificationException
@@ -30,6 +31,14 @@ export class Provider {
   ) {}
 
   protected async createUser (user: Partial<UserEntity>): Promise<UserEntity> {
+    if (user.email != null) {
+      const existingUser = await this.adapter.getUserByEmail(user.email)
+
+      if (existingUser != null) {
+        throw new DuplicateEmailException()
+      }
+    }
+
     return await this.adapter.createUser({
       id: randomUUID(),
       state: 'Active',
@@ -37,10 +46,8 @@ export class Provider {
       email: null,
       emailVerified: false,
       picture: null,
-      creationTime: now(),
-      lastSignInTime: null,
+      createdAt: now(),
       customClaims: {},
-      credentials: [],
       ...user
     })
   }
@@ -59,7 +66,8 @@ export class Provider {
         id: verificationId,
         // Must set a non-null value here to avoid Three-Valued Logic (3VL)
         data: serverSideData ?? {},
-        expiresAt: addSeconds(now(), this.jwt.verificationTokenMaxAge).toISOString()
+        expiredAt: addSeconds(now(), this.jwt.verificationTokenMaxAge),
+        createdAt: now()
       })
     ])
 
@@ -85,7 +93,7 @@ export class Provider {
   protected async useVerification<T = any>(verificationId: string): Promise<T> {
     const verification = await this.adapter.useVerification(verificationId)
 
-    if (verification == null || isPast(new Date(verification.expiresAt))) {
+    if (verification == null || isPast(new Date(verification.expiredAt))) {
       throw new InvalidVerificationException()
     }
 
@@ -99,12 +107,10 @@ export class Provider {
 
   protected async createSession (
     user: UserEntity,
-    extraData?: Pick<SessionEntity, 'creationIp' | 'userAgent'>
+    extraData?: Pick<SessionEntity, 'signInIp' | 'userAgent'>
   ): Promise<AuthResponse> {
     const sessionId = randomUUID()
     const currentDate = now()
-
-    user.lastSignInTime = currentDate
 
     const expiresAt = addSeconds(currentDate, this.jwt.refreshTokenMaxAge)
     const [accessToken, refreshToken] = await Promise.all([
@@ -114,11 +120,11 @@ export class Provider {
         id: sessionId,
         counter: 0,
         createdAt: currentDate,
-        expiresAt,
+        expiredAt: expiresAt,
         lastActiveAt: currentDate,
-        creationIp: extraData?.creationIp ?? null,
+        signInIp: extraData?.signInIp ?? null,
         userAgent: extraData?.userAgent ?? null,
-        user
+        userId: user.id
       })
     ])
 
@@ -133,11 +139,11 @@ export class Provider {
   protected async updateSession (sessionId: string): Promise<AuthResponse> {
     const session = await this.adapter.getSession(sessionId)
 
-    if (session == null || isPast(new Date(session.expiresAt))) {
+    if (session == null || isPast(new Date(session.expiredAt))) {
       throw new InvalidSessionException()
     }
 
-    const { user } = session
+    const user = await this.adapter.getUser(session.userId)
     this.assertUserState(user)
 
     const [nextAccessToken, nextRefreshToken] = await Promise.all([
@@ -147,12 +153,12 @@ export class Provider {
 
     session.counter += 1
     session.lastActiveAt = now()
-    session.expiresAt = addSeconds(now(), this.jwt.refreshTokenMaxAge)
+    session.expiredAt = addSeconds(now(), this.jwt.refreshTokenMaxAge)
 
     return {
       accessToken: nextAccessToken,
       refreshToken: nextRefreshToken,
-      expirationTime: session.expiresAt.toISOString()
+      expirationTime: session.expiredAt.toISOString()
     }
   }
 

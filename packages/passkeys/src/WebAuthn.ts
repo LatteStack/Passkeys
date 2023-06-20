@@ -7,7 +7,9 @@ import {
   type PublicKeyCredentialRequestOptionsJSON,
   type PublicKeyCredentialCreationOptionsJSON,
   type PublicKeyCredentialWithAttestationJSON,
-  type PublicKeyCredentialWithAssertionJSON
+  type PublicKeyCredentialWithAssertionJSON,
+  type PublicKeyCredentialUserEntityJSON,
+  type PublicKeyCredentialDescriptorJSON
 } from './types'
 import { merge } from 'lodash'
 import { minutesToMilliseconds } from 'date-fns'
@@ -28,6 +30,15 @@ export interface AttestationResult {
 export interface AssertionResult {
   counter: number
   userHandle: string | null
+}
+
+function addTypeToDescriptors (
+  descriptors: Array<Omit<PublicKeyCredentialDescriptorJSON, 'type'>>
+): PublicKeyCredentialDescriptorJSON[] {
+  return descriptors.map<PublicKeyCredentialDescriptorJSON>((descriptor) => ({
+    ...descriptor,
+    type: 'public-key'
+  }))
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -76,11 +87,11 @@ export class WebAuthn {
     })
   }
 
-  async createCreationOptions (
-    options: Pick<PublicKeyCredentialCreationOptionsJSON, 'user' | 'excludeCredentials'> & {
-      challenge: string
-    }
-  ): Promise<PublicKeyCredentialCreationOptionsJSON> {
+  async createCreationOptions (options: {
+    challenge: string
+    user: PublicKeyCredentialUserEntityJSON
+    excludeCredentials?: Array<Omit<PublicKeyCredentialDescriptorJSON, 'type'>>
+  }): Promise<PublicKeyCredentialCreationOptionsJSON> {
     const optionsFromFido2Lib = await this.fido2Lib.attestationOptions()
 
     return {
@@ -89,7 +100,7 @@ export class WebAuthn {
       challenge: options.challenge,
       pubKeyCredParams: optionsFromFido2Lib.pubKeyCredParams,
       timeout: optionsFromFido2Lib.timeout,
-      excludeCredentials: options.excludeCredentials ?? [],
+      excludeCredentials: addTypeToDescriptors(options.excludeCredentials ?? []),
       authenticatorSelection: optionsFromFido2Lib.authenticatorSelection,
       attestation: optionsFromFido2Lib.attestation
       // extensions: optionsFromFido2Lib.extensions ?? []
@@ -152,18 +163,17 @@ export class WebAuthn {
     }
   }
 
-  async createRequestOptions (
-    options: Pick<PublicKeyCredentialRequestOptionsJSON, 'allowCredentials'> & {
-      challenge: string
-    }
-  ): Promise<PublicKeyCredentialRequestOptionsJSON> {
+  async createRequestOptions (options: {
+    challenge: string
+    allowCredentials?: Array<Omit<PublicKeyCredentialDescriptorJSON, 'type'>>
+  }): Promise<PublicKeyCredentialRequestOptionsJSON> {
     const optionsFromFido2Lib = await this.fido2Lib.assertionOptions()
     return {
       challenge: options.challenge,
       rpId: optionsFromFido2Lib.rpId,
       userVerification: optionsFromFido2Lib.userVerification,
       timeout: optionsFromFido2Lib.timeout,
-      allowCredentials: options.allowCredentials ?? []
+      allowCredentials: addTypeToDescriptors(options.allowCredentials ?? [])
       // extensions: optionsFromFido2Lib.extensions ?? []
     }
   }

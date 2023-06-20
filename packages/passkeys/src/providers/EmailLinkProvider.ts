@@ -5,7 +5,7 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { type InjectionProvider } from '../types'
 import { OPTIONS } from '../constants'
 import { PasskeysOptions } from '../Passkeys'
-import { Adapter } from '../Adapter'
+import { Adapter } from '../adapters/Adapter'
 import { Jwt } from '../Jwt'
 
 const EMAIL_LINK_OPTIONS = Symbol('EMAIL_LINK_OPTIONS')

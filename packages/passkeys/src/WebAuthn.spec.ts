@@ -1,5 +1,5 @@
 import { container } from 'tsyringe'
-import { type CredentialEntity } from './Adapter'
+import { type CredentialEntity } from './adapters/Adapter'
 import { OPTIONS } from './constants'
 import { WebAuthn } from './WebAuthn'
 
@@ -42,7 +42,6 @@ const assertion = {
 
 const credential: CredentialEntity = {
   id: 'p0j2terIvM1Gfv8inptjEsmaZ3csdMMUH_Bk_MN1AUk',
-  type: 'public-key',
   publicKey: '-----BEGIN PUBLIC KEY-----\n' +
     'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEey3m08d16Chj94FYOmdfjgyc5YlO\n' +
     'joggSf/3tA+HqsXtdIX7aqxtUHqkQ9d9czPlBawA3BxLVRsp5ogkJEaIzw==\n' +

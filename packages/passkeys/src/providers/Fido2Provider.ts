@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { Adapter, type UserEntity, type CredentialEntity } from '../Adapter'
+import { Adapter, type UserEntity, type CredentialEntity } from '../adapters/Adapter'
 import { OPTIONS } from '../constants'
 import { Jwt } from '../Jwt'
 import { type PasskeysOptions } from '../Passkeys'
@@ -10,7 +10,8 @@ import {
   type PublicKeyCredentialCreationOptionsJSON,
   type PublicKeyCredentialWithAttestationJSON,
   type PublicKeyCredentialWithAssertionJSON,
-  type PublicKeyCredentialUserEntityJSON
+  type PublicKeyCredentialUserEntityJSON,
+  type PublicKeyCredentialDescriptorJSON
 } from '../types'
 import { fromBase64Url, now } from '../utils'
 import { WebAuthn } from '../WebAuthn'
@@ -117,7 +118,7 @@ export class Fido2Provider extends Provider {
 
   protected async challengeForExistingUser (params: {
     webauthnUser: PublicKeyCredentialUserEntityJSON
-    allowCredentials: CredentialEntity[]
+    allowCredentials: Array<Omit<PublicKeyCredentialDescriptorJSON, 'type'>>
   }): Promise<Fido2ChallengeResponse> {
     const { webauthnUser, allowCredentials } = params
 
@@ -135,7 +136,7 @@ export class Fido2Provider extends Provider {
 
   protected async challengeForNewAuthenticator (params: {
     webauthnUser: PublicKeyCredentialUserEntityJSON
-    excludeCredentials: CredentialEntity[]
+    excludeCredentials: Array<Omit<PublicKeyCredentialDescriptorJSON, 'type'>>
   }): Promise<Fido2ChallengeResponse> {
     const { webauthnUser, excludeCredentials } = params
 
@@ -216,7 +217,7 @@ export class Fido2Provider extends Provider {
         counter: attestationResult.counter,
         userHandle: attestationResult.userHandle,
         transports: attestation.response.transports,
-        type: 'public-key'
+        createdAt: now()
       }]
     })
 
@@ -244,16 +245,12 @@ export class Fido2Provider extends Provider {
       userHandle: currentCredential.userHandle
     })
 
-    const nextUser = await this.adapter.updateUser({
-      ...user,
-      lastSignInTime: now(),
-      credentials: [{
-        ...currentCredential,
-        counter: nextCounter
-      }]
+    await this.adapter.createCredential({
+      ...currentCredential,
+      counter: nextCounter
     })
 
-    return await this.createSession(nextUser)
+    return await this.createSession(user)
   }
 
   protected async signInWithNewAuthenticator (params: {
@@ -263,19 +260,16 @@ export class Fido2Provider extends Provider {
   }): Promise<AuthResponse> {
     const { user, challenge, attestation } = params
     const attestationResult = await this.webauthn.verifyAttestation(attestation, { challenge })
-    const nextUser = await this.adapter.updateUser({
-      ...user,
-      lastSignInTime: now(),
-      credentials: [{
-        id: attestationResult.credId,
-        publicKey: attestationResult.publicKey,
-        counter: attestationResult.counter,
-        userHandle: attestationResult.userHandle,
-        transports: attestation.response.transports,
-        type: 'public-key'
-      }]
+
+    await this.adapter.createCredential({
+      id: attestationResult.credId,
+      publicKey: attestationResult.publicKey,
+      counter: attestationResult.counter,
+      userHandle: attestationResult.userHandle,
+      transports: attestation.response.transports,
+      createdAt: now()
     })
 
-    return await this.createSession(nextUser)
+    return await this.createSession(user)
   }
 }

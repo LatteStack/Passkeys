@@ -2,7 +2,6 @@
   "name": "@lattestack/passkeys",
   "version": "0.0.1",
   "dependencies": {
-    "@types/nodemailer": "^6.4.8",
     "before-after-hook": "^3.0.2",
     "date-fns": "^2.30.0",
     "debug": "^4.3.4",
@@ -12,10 +11,14 @@
     "nodemailer": "^6.9.3",
     "reflect-metadata": "^0.1.13",
     "tsyringe": "^4.7.0",
+    "typeorm": "^0.3.16",
     "yup": "^1.2.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.4",
     "@types/debug": "^4.1.8",
-    "@types/lodash": "^4.14.195"
+    "@types/lodash": "^4.14.195",
+    "@types/nodemailer": "^6.4.8",
+    "better-sqlite3": "^8.4.0"
   }
 }
