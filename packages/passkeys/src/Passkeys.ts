@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import {
   type AuthResponse,
   type Constructor,
@@ -56,6 +57,21 @@ const optionsSchema: yup.ObjectSchema<PasskeysOptions> = yup.object({
   debug: yup.boolean().optional().transform((value) => Boolean(value))
 })
 
+function apply<T, U extends keyof T> (
+  instance: T,
+  methodName: U
+): T[U] extends Function ? T[U] : never {
+  const method = instance[methodName]
+
+  if (typeof method === 'function') {
+    return ((...args: []): any => {
+      return Reflect.apply(method, instance, [...args])
+    }) as any
+  }
+
+  throw new Error('invalid method.')
+}
+
 @tsyringe.scoped(tsyringe.Lifecycle.ContainerScoped)
 export class Passkeys {
   constructor (
@@ -103,17 +119,15 @@ export class Passkeys {
     return tsyringe.container.resolve(Passkeys)
   }
 
-  signOut () {
-    this.provider.signOut()
-  }
+  signOut = apply(this.fido2Provider, 'signOut')
 
-  async challengeWithFido2 (request: Fido2ChallengeRequest): Promise<Fido2ChallengeResponse> {
-    return await this.fido2Provider.challenge(request)
-  }
+  challengeWithFido2 = apply(this.fido2Provider, 'challenge')
 
-  async signInWithFido2 (request: Fido2SignInRequest): Promise<AuthResponse> {
-    return await this.fido2Provider.signIn(request)
-  }
+  signInWithFido2 = apply(this.fido2Provider, 'signIn')
+
+  // async signInWithFido2 (request: Fido2SignInRequest): Promise<AuthResponse> {
+  //   return await this.fido2Provider.signIn(request)
+  // }
 
   // challengeWithEmailLink
   // signInWithEmailLink
