@@ -75,10 +75,10 @@ function apply<T, U extends keyof T> (
 @tsyringe.scoped(tsyringe.Lifecycle.ContainerScoped)
 export class Passkeys {
   constructor (
-    private readonly provider: Provider,
-    private readonly fido2Provider: Fido2Provider
+    // private readonly provider: Provider,
+    private readonly provider: Fido2Provider
   ) {
-    console.log(this.fido2Provider)
+    console.log(this.provider)
   }
 
   use (registrations: Registrations): void {
@@ -119,11 +119,11 @@ export class Passkeys {
     return tsyringe.container.resolve(Passkeys)
   }
 
-  signOut = apply(this.fido2Provider, 'signOut')
+  signOut = apply(this.provider, 'signOut')
 
-  challengeWithFido2 = apply(this.fido2Provider, 'challenge')
+  challengeWithFido2 = apply(this.provider, 'challenge')
 
-  signInWithFido2 = apply(this.fido2Provider, 'signIn')
+  signInWithFido2 = apply(this.provider, 'signIn')
 
   // async signInWithFido2 (request: Fido2SignInRequest): Promise<AuthResponse> {
   //   return await this.fido2Provider.signIn(request)
