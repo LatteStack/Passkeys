@@ -46,7 +46,7 @@ interface RendererProps {
   logo?: string
   site: {
     origin: string
-    name: string
+    hostname: string
   }
 }
 
@@ -75,7 +75,7 @@ const template = `
         <tr>
           <td align="left" bgcolor="#ffffff" style="padding: 36px 24px 0; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; border-top: 3px solid #d4dadf;">
             <h1 style="margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 48px;">
-              Sign in to {{siteName}}
+              Sign in to {{hostName}}
             </h1>
           </td>
         </tr>
@@ -197,19 +197,19 @@ export class EmailLinkProvider extends Provider {
         providerOptions: this.initial
       })
     } else {
-      const { host } = new URL(urlWithToken)
+      const { origin, hostname } = new URL(this.options.origin)
       const rendererProps: RendererProps = {
         url,
         site: {
-          origin: '',
-          name: ''
+          origin,
+          hostname
         }
       }
 
       await createTransport(this.initial.server).sendMail({
         to: email,
-        from: this.initial.from ?? `Passkeys <no-reply@${host}>`,
-        subject: `Sign in to ${host}`,
+        from: this.initial.from ?? `Passkeys <no-reply@${hostname}>`,
+        subject: `Sign in to ${hostname}`,
         text: this.renderText(rendererProps),
         html: this.renderHTML(rendererProps)
       })
@@ -230,7 +230,7 @@ export class EmailLinkProvider extends Provider {
 
   protected renderText (props: RendererProps): string {
     const { site, url } = props
-    return `Sign in to ${site.name}\n${url}\n\n`
+    return `Sign in to ${site.hostname}\n${url}\n\n`
   }
 
   protected renderHTML (props: RendererProps): string {
