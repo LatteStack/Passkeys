@@ -167,6 +167,14 @@ export class Provider {
     await this.adapter.deleteSession(sessionId).catch(noop)
   }
 
+  async verifyAccessToken (accessToken: string): Promise<any> {
+    return await this.jwt.verifyAccessToken(accessToken)
+  }
+
+  async verifyRefreshToken (refreshToken: string): Promise<any> {
+    return await this.jwt.verifyAccessToken(refreshToken)
+  }
+
   protected async getUserOrThrow (uid: string): Promise<UserEntity> {
     const user = await this.adapter.getUser(uid)
     this.assertUserState(user)

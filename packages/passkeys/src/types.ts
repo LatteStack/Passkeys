@@ -33,7 +33,7 @@ interface AuthenticationExtensionsClientOutputsJSON extends AuthenticationExtens
 }
 
 export interface PublicKeyCredentialWithClientExtensionResults extends PublicKeyCredential {
-  authenticatorAttachment?: string | null
+  // authenticatorAttachment?: string | null
   clientExtensionResults?: AuthenticationExtensionsClientOutputsJSON
 }
 

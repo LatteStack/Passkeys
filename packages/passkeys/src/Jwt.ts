@@ -138,7 +138,7 @@ export class Jwt {
 
   async verifyAccessToken (token: string, options?: {
     subject?: string
-  }): Promise<{
+  }): Promise<Record<string, any> & {
       subject: string
       sessionId: string
     }> {
@@ -149,7 +149,7 @@ export class Jwt {
     })
 
     const currentDate = now()
-    const { sub: subject, sid: sessionId } = await yup.object({
+    const { sub: subject, sid: sessionId, ...rest } = await yup.object({
       exp: yup.number().required().test((value) => isAfter(fromUnixTime(value), currentDate)),
       iat: yup.number().required().test((value) => isBefore(fromUnixTime(value), currentDate)),
       iss: yup.string().required().test((value) => value === this.options.origin),
@@ -159,6 +159,8 @@ export class Jwt {
     }).validate(payload)
 
     return {
+      ...rest,
+      sub: subject,
       subject,
       sessionId
     }

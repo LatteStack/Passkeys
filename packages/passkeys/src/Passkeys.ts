@@ -1,21 +1,13 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import {
-  type AuthResponse,
-  type Constructor,
-  type Registrations
-} from './types'
-// import { type Provider } from './providers/Provider'
+import { type Registrations } from './types'
 import * as yup from 'yup'
 import * as tsyringe from 'tsyringe'
 import { OPTIONS } from './constants'
 import { omit } from 'lodash'
 import { type JwtOptions } from './Jwt'
 import {
-  type Fido2ChallengeRequest,
-  type Fido2ChallengeResponse,
   Fido2Provider,
-  type Fido2SignInRequest,
-  Provider
+  EmailLinkProvider
 } from './providers'
 
 export interface PasskeysOptions {
@@ -76,7 +68,8 @@ function apply<T, U extends keyof T> (
 export class Passkeys {
   constructor (
     // private readonly provider: Provider,
-    private readonly provider: Fido2Provider
+    private readonly provider: Fido2Provider,
+    private readonly emailProvider: EmailLinkProvider
   ) {
     console.log(this.provider)
   }
@@ -109,21 +102,18 @@ export class Passkeys {
 
   signOut = apply(this.provider, 'signOut')
 
+  verifyAccessToken = apply(this.provider, 'verifyAccessToken')
+
+  verifyRefreshToken = apply(this.provider, 'verifyRefreshToken')
+
   challengeWithFido2 = apply(this.provider, 'challenge')
 
   signInWithFido2 = apply(this.provider, 'signIn')
 
-  // async signInWithFido2 (request: Fido2SignInRequest): Promise<AuthResponse> {
-  //   return await this.fido2Provider.signIn(request)
-  // }
+  challengeWithEmailLink = apply(this.emailProvider, 'challenge')
 
-  // challengeWithEmailLink
-  // signInWithEmailLink
-  // signInWithCustomToken
-  // signOut
-  // verifyAccessToken
-  // verifyRefreshToken
-  //
+  signInWithEmailLink = apply(this.provider, 'signIn')
+
   static create (options: PasskeysOptions): Passkeys {
     tsyringe.container.register(OPTIONS, {
       useValue: optionsSchema.validateSync(options)

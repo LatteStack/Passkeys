@@ -2,6 +2,7 @@
   "name": "@lattestack/passkeys",
   "version": "0.0.1",
   "dependencies": {
+    "@nestjs/common": "^10.0.3",
     "before-after-hook": "^3.0.2",
     "date-fns": "^2.30.0",
     "debug": "^4.3.4",

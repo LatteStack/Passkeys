@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import Database from 'better-sqlite3'
 import { addSeconds } from 'date-fns'
 import { container, type InjectionToken } from 'tsyringe'
@@ -93,6 +94,7 @@ describe('Fido2Provider', () => {
   })
 
   let refreshToken!: string
+  let accessToken!: string
 
   it('It should correctly return the challenge', async () => {
     const instance = container.resolve(Fido2Provider)
@@ -118,6 +120,7 @@ describe('Fido2Provider', () => {
     expect(response.expirationTime).toBeDefined()
 
     refreshToken = response.refreshToken
+    accessToken = response.accessToken
   })
 
   it('should correctly verify refreshToken and return tokens', async () => {
@@ -125,5 +128,10 @@ describe('Fido2Provider', () => {
 
     const response = await instance.session({ refreshToken })
     expect(response).toBeDefined()
+  })
+
+  it('should signOut correctly', async () => {
+    const instance = container.resolve(Fido2Provider)
+    expect(instance.signOut(accessToken)).resolves.not.toThrow()
   })
 })
