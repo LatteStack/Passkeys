@@ -13,10 +13,11 @@ import {
   type PublicKeyCredentialUserEntityJSON,
   type PublicKeyCredentialDescriptorJSON
 } from '../types'
-import { base64urlToPlain, extractChallengeFromClientDataJSON, now } from '../utils'
+import { base64urlToPlain, extractChallengeFromClientDataJSON, normalizeEmail, now } from '../utils'
 import { WebAuthn } from '../WebAuthn'
 import { Provider } from './Provider'
 import { InvalidOperationException } from '../exceptions'
+import * as yup from 'yup'
 
 export interface Fido2ChallengeRequest {
   email: string
@@ -67,7 +68,15 @@ export class Fido2Provider extends Provider {
   }
 
   async challenge (request: Fido2ChallengeRequest): Promise<Fido2ChallengeResponse> {
-    const { email } = request
+    const { email } = await yup.object({
+      email: yup.string()
+        .transform((value) => normalizeEmail(value))
+        .email()
+        .required()
+    }).validate(request, {
+      stripUnknown: true
+    })
+
     const existingUser = await this.adapter.getUserByEmail(email)
 
     if (existingUser === null) {

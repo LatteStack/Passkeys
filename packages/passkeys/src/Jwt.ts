@@ -48,13 +48,15 @@ export class Jwt {
   readonly refreshTokenMaxAge: number
 
   constructor (@inject(OPTIONS) private readonly options: PasskeysOptions) {
-    const { secret, jwt } = options
+    const { secret: rawSecret, jwt } = options
 
-    if (secret == null) {
+    if (rawSecret == null) {
       throw new InvalidSecretException()
     }
 
-    if (secret.length < 16) {
+    const secretEncoded = encodeText(rawSecret)
+
+    if (secretEncoded.byteLength < 16) {
       console.warn(
         'The Secret you provided is too weak. ' +
         'It is recommended to use a Secret of at least 16 bytes. ' +
@@ -63,7 +65,7 @@ export class Jwt {
       )
     }
 
-    this.secret = new Uint8Array(encodeText(options.secret))
+    this.secret = new Uint8Array(secretEncoded)
     this.verificationTokenMaxAge = minutesToMilliseconds(10)
     this.accessTokenMaxAge = jwt?.accessTokenMaxAge ?? hoursToSeconds(1)
     this.refreshTokenMaxAge = jwt?.refreshTokenMaxAge ?? hoursToSeconds(24 * 30)

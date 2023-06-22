@@ -107,18 +107,6 @@ export class Passkeys {
     return tsyringe.container.isRegistered(token)
   }
 
-  static create (options: PasskeysOptions): Passkeys {
-    tsyringe.container.register(OPTIONS, {
-      useValue: optionsSchema.validateSync(options)
-    })
-
-    tsyringe.container.register(Passkeys, {
-      useClass: Passkeys
-    })
-
-    return tsyringe.container.resolve(Passkeys)
-  }
-
   signOut = apply(this.provider, 'signOut')
 
   challengeWithFido2 = apply(this.provider, 'challenge')
@@ -136,4 +124,15 @@ export class Passkeys {
   // verifyAccessToken
   // verifyRefreshToken
   //
+  static create (options: PasskeysOptions): Passkeys {
+    tsyringe.container.register(OPTIONS, {
+      useValue: optionsSchema.validateSync(options)
+    })
+
+    tsyringe.container.register(Passkeys, {
+      useClass: Passkeys
+    })
+
+    return tsyringe.container.resolve(Passkeys)
+  }
 }

@@ -35,3 +35,13 @@ export class InvalidTokenException extends AuthException {
   override name = 'invalid-token'
   override message = 'invalid-token.'
 }
+
+export class InvalidUrlException extends AuthException {
+  override name = 'invalid-url'
+  override message = 'invalid-url.'
+}
+
+export class InvalidEmailException extends AuthException {
+  override name = 'invalid-email'
+  override message = 'invalid-email.'
+}
